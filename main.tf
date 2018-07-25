@@ -1,5 +1,6 @@
 provider "aws" {
   region = "${var.region}"
+  shared_credentials_file = "/home/blissnd/.aws/credentials"
 }
 
 resource "aws_vpc" "vpc" {
