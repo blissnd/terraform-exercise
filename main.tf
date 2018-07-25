@@ -28,6 +28,13 @@ resource "aws_subnet" "subnet-c" {
   availability_zone = "${var.region}c"
 }
 
+resource "aws_subnet" "subnet-d" {
+  count = "${var.extra_subnet}"
+  vpc_id            = "${aws_vpc.vpc.id}"
+  cidr_block        = "${var.subnet-cidr-d}"
+  availability_zone = "${var.region}d"
+}
+
 resource "aws_route_table" "subnet-route-table" {
   vpc_id = "${aws_vpc.vpc.id}"
 }
@@ -57,10 +64,15 @@ resource "aws_route_table_association" "subnet-c-route-table-association" {
   route_table_id = "${aws_route_table.subnet-route-table.id}"
 }
 
+resource "aws_route_table_association" "subnet-d-route-table-association" {
+  count = "${var.extra_subnet}"
+  subnet_id      = "${aws_subnet.subnet-d.id}"
+  route_table_id = "${aws_route_table.subnet-route-table.id}"
+}
 
 # Nginx
 resource "aws_instance" "instance" {
-  ami           = "ami-cdbfa4ab"
+  ami           = "${var.ami_id}"
   instance_type = "t2.micro"
   vpc_security_group_ids      = [ "${aws_security_group.security-group.id}" ]
   subnet_id                   = "${aws_subnet.subnet-a.id}"
@@ -71,6 +83,21 @@ yum install -y nginx
 service nginx start
 EOF
 }
+
+# Nginx-2 (Backup)
+resource "aws_instance" "instance2" {
+  ami           = "${var.ami_id}"
+  instance_type = "t2.micro"
+  vpc_security_group_ids      = [ "${aws_security_group.security-group.id}" ]
+  subnet_id                   = "${aws_subnet.subnet-b.id}"
+  associate_public_ip_address = true
+  user_data                   = <<EOF
+#!/bin/sh
+yum install -y nginx
+service nginx start
+EOF
+}
+
 
 resource "aws_security_group" "security-group" {
   vpc_id      = "${aws_vpc.vpc.id}"

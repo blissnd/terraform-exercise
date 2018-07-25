@@ -1,4 +1,6 @@
 region="eu-west-1"
+ami_id="ami-cdbfa4ab"
+extra_subnet="0"
 
 vpc-cidr = "10.10.10.0/24"
 subnet-cidr-a = "10.10.10.0/27"
