@@ -60,7 +60,7 @@ resource "aws_route_table_association" "subnet-c-route-table-association" {
 # Nginx
 resource "aws_instance" "instance" {
   ami           = "ami-cdbfa4ab"
-  instance_type = "t2.small"
+  instance_type = "t2.micro"
   vpc_security_group_ids      = [ "${aws_security_group.security-group.id}" ]
   subnet_id                   = "${aws_subnet.subnet-a.id}"
   associate_public_ip_address = true
