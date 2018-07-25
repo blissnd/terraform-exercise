@@ -134,3 +134,42 @@ resource "aws_security_group" "security-group" {
 output "nginx_domain" {
   value = "${aws_instance.instance.public_dns}"
 }
+
+############################# Bastion ###########################
+
+resource "aws_instance" "bastion" {
+  ami                         = "${var.ami_id}"
+  key_name                    = "${aws_key_pair.bastion_key.key_name}"
+  instance_type               = "t2.micro"
+  vpc_security_group_ids  = ["${aws_security_group.bastion-sg.id}"]
+  associate_public_ip_address = true
+  subnet_id                   = "${aws_subnet.subnet-a.id}"
+}
+
+resource "aws_security_group" "bastion-sg" {
+  name   = "bastion-security-group"
+  vpc_id = "${aws_vpc.vpc.id}"
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    protocol    = -1
+    from_port   = 0 
+    to_port     = 0 
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_key_pair" "bastion_key" {
+  key_name   = "hello"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0gnaIxNKWCupRDUS5d8gl/FHm2keegihvOCy+tQ3XbIyFDQdSGryNxBGcGyPDWoYzK3z1PnTjldJ9kxFVqq3PadJXq9VGYvQ4EB4SE/dVY0ACM9VKmC8kLdBrggNuZxYZc0tY0jJegSZPjvBX74qknW6gW5YghTAf1Y4G3uovJRTcl/yaQck8c3NsUwerppZxrA91XD5vwujD5zaPq+UJAUwvePqzsEi/C6ZYyJiD9KBG9QMNJd9POUWUeAHwTgbbw+er40mKIyIoXBZ47YxlQwKAfnCam7/DQagcqkqKTMuqhz+j19IrAZ95/1w8gyY6tNdmTzyi1XhWFma4NkLt blissnd@blissnd-NUC"
+}
+
+output "bastion_public_ip" {
+  value = "${aws_instance.bastion.public_ip}"
+}
