@@ -79,6 +79,12 @@ resource "aws_instance" "instance" {
   associate_public_ip_address = true
   user_data                   = <<EOF
 #!/bin/sh
+sudo yum install -y java-1.8.0-openjdk
+sudo yum install -y maven
+sudo yum install -y git
+git clone -b nathan_capgemini --single-branch https://github.com/blissnd/terraform-exercise.git
+cd terraform-exercise/spring-boot-sample-tomcat
+
 yum install -y nginx
 service nginx start
 EOF
@@ -93,6 +99,12 @@ resource "aws_instance" "instance2" {
   associate_public_ip_address = true
   user_data                   = <<EOF
 #!/bin/sh
+sudo yum install -y java-1.8.0-openjdk
+sudo yum install -y maven
+sudo yum install -y git
+git clone -b nathan_capgemini --single-branch https://github.com/blissnd/terraform-exercise.git
+cd terraform-exercise/spring-boot-sample-tomcat
+
 yum install -y nginx
 service nginx start
 EOF
