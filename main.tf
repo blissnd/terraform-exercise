@@ -82,11 +82,22 @@ resource "aws_instance" "instance" {
 sudo yum install -y java-1.8.0-openjdk
 sudo yum install -y maven
 sudo yum install -y git
-git clone -b nathan_capgemini --single-branch https://github.com/blissnd/terraform-exercise.git
-cd terraform-exercise/spring-boot-sample-tomcat
-
+git clone https://github.com/spring-projects/spring-boot.git
+sudo yum install -y wget
+cd /usr/local/src
+sudo wget http://www-us.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
+sudo tar -xf apache-maven-3.5.4-bin.tar.gz
+sudo mv apache-maven-3.5.4/ apache-maven/
+cd /etc/profile.d/
+export M2_HOME=/usr/local/src/apache-maven
+export PATH=${M2_HOME}/bin:${PATH}
+cd ~/spring_test/spring-boot/spring-boot-samples/spring-boot-sample-tomcat
+mvn spring-boot:run
 yum install -y nginx
+/etc/nginx
+sudo sed 's/^[^#].*location\s\/\s{[.\n]*/\tlocation \/ {\n\t\tproxy_pass http:\/\/localhost:8080;/' nginx.conf | sudo tee nginx.conf
 service nginx start
+sudo setenforce 0
 EOF
 }
 
@@ -102,11 +113,22 @@ resource "aws_instance" "instance2" {
 sudo yum install -y java-1.8.0-openjdk
 sudo yum install -y maven
 sudo yum install -y git
-git clone -b nathan_capgemini --single-branch https://github.com/blissnd/terraform-exercise.git
-cd terraform-exercise/spring-boot-sample-tomcat
-
+git clone https://github.com/spring-projects/spring-boot.git
+sudo yum install -y wget
+cd /usr/local/src
+sudo wget http://www-us.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
+sudo tar -xf apache-maven-3.5.4-bin.tar.gz
+sudo mv apache-maven-3.5.4/ apache-maven/
+cd /etc/profile.d/
+export M2_HOME=/usr/local/src/apache-maven
+export PATH=${M2_HOME}/bin:${PATH}
+cd ~/spring_test/spring-boot/spring-boot-samples/spring-boot-sample-tomcat
+mvn spring-boot:run
 yum install -y nginx
+sudo sed 's/^[^#].*location\s\/\s{[.\n]*/\tlocation \/ {\n\t\tproxy_pass http:\/\/localhost:8080;/' nginx.conf | sudo tee nginx.conf
+/etc/nginx
 service nginx start
+sudo setenforce 0
 EOF
 }
 
