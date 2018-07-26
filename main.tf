@@ -73,65 +73,72 @@ resource "aws_route_table_association" "subnet-d-route-table-association" {
 # Nginx
 resource "aws_instance" "instance" {
   ami           = "${var.ami_id}"
+  key_name   = "${aws_key_pair.vm_key.key_name}"
   instance_type = "t2.micro"
   vpc_security_group_ids      = [ "${aws_security_group.security-group.id}" ]
   subnet_id                   = "${aws_subnet.subnet-a.id}"
   associate_public_ip_address = true
   user_data                   = <<EOF
-#!/bin/sh
-sudo yum install -y java-1.8.0-openjdk
-sudo yum install -y maven
-sudo yum install -y git
-git clone https://github.com/spring-projects/spring-boot.git
-sudo yum install -y wget
-cd /usr/local/src
-sudo wget http://www-us.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
-sudo tar -xf apache-maven-3.5.4-bin.tar.gz
-sudo mv apache-maven-3.5.4/ apache-maven/
-cd /etc/profile.d/
-export M2_HOME=/usr/local/src/apache-maven
-export PATH=${M2_HOME}/bin:${PATH}
-cd ~/spring_test/spring-boot/spring-boot-samples/spring-boot-sample-tomcat
-mvn spring-boot:run
-yum install -y nginx
-/etc/nginx
-sudo sed 's/^[^#].*location\s\/\s{[.\n]*/\tlocation \/ {\n\t\tproxy_pass http:\/\/localhost:8080;/' nginx.conf | sudo tee nginx.conf
-service nginx start
-sudo setenforce 0
-EOF
+  #!/bin/sh
+  sudo yum install -y java-1.8.0-openjdk-devel
+  sudo yum install -y maven
+  sudo yum install -y git
+  sudo yum install -y wget
+  cd /usr/local/src
+  sudo wget http://www-us.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
+  sudo tar -xf apache-maven-3.5.4-bin.tar.gz
+  sudo mv apache-maven-3.5.4/ apache-maven/
+  export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.171-8.b10.38.amzn1.x86_64
+  export M2_HOME=/usr/local/src/apache-maven
+  export PATH=/usr/local/src/apache-maven/bin:/usr/local/src/apache-maven/:$PATH
+  export M2_HOME=/usr/local/src/apache-maven
+  cd /home/ec2-user
+  git clone https://github.com/spring-projects/spring-boot.git
+  yum install -y nginx
+  cd /etc/nginx
+  sudo sed -i 's/^[^#].*location\s\/\s{[.\n]*/\tlocation \/ {\n\t\tproxy_pass http:\/\/localhost:8080;/' nginx.conf
+  service nginx start
+  sudo setenforce 0
+  cd /home/ec2-user/spring-boot/spring-boot-samples/spring-boot-sample-tomcat
+  mvn spring-boot:run
+  EOF
 }
+
+#################################################
 
 # Nginx-2 (Backup)
 resource "aws_instance" "instance2" {
-  ami           = "${var.ami_id}"
+ ami           = "${var.ami_id}"
+  key_name   = "${aws_key_pair.vm_key.key_name}"
   instance_type = "t2.micro"
   vpc_security_group_ids      = [ "${aws_security_group.security-group.id}" ]
-  subnet_id                   = "${aws_subnet.subnet-b.id}"
+  subnet_id                   = "${aws_subnet.subnet-a.id}"
   associate_public_ip_address = true
   user_data                   = <<EOF
-#!/bin/sh
-sudo yum install -y java-1.8.0-openjdk
-sudo yum install -y maven
-sudo yum install -y git
-git clone https://github.com/spring-projects/spring-boot.git
-sudo yum install -y wget
-cd /usr/local/src
-sudo wget http://www-us.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
-sudo tar -xf apache-maven-3.5.4-bin.tar.gz
-sudo mv apache-maven-3.5.4/ apache-maven/
-cd /etc/profile.d/
-export M2_HOME=/usr/local/src/apache-maven
-export PATH=${M2_HOME}/bin:${PATH}
-cd ~/spring_test/spring-boot/spring-boot-samples/spring-boot-sample-tomcat
-mvn spring-boot:run
-yum install -y nginx
-sudo sed 's/^[^#].*location\s\/\s{[.\n]*/\tlocation \/ {\n\t\tproxy_pass http:\/\/localhost:8080;/' nginx.conf | sudo tee nginx.conf
-/etc/nginx
-service nginx start
-sudo setenforce 0
-EOF
+  #!/bin/sh
+  sudo yum install -y java-1.8.0-openjdk-devel
+  sudo yum install -y maven
+  sudo yum install -y git
+  sudo yum install -y wget
+  cd /usr/local/src
+  sudo wget http://www-us.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
+  sudo tar -xf apache-maven-3.5.4-bin.tar.gz
+  sudo mv apache-maven-3.5.4/ apache-maven/
+  export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.171-8.b10.38.amzn1.x86_64
+  export M2_HOME=/usr/local/src/apache-maven
+  export PATH=/usr/local/src/apache-maven/bin:/usr/local/src/apache-maven/:$PATH
+  export M2_HOME=/usr/local/src/apache-maven
+  cd /home/ec2-user
+  git clone https://github.com/spring-projects/spring-boot.git
+  yum install -y nginx
+  cd /etc/nginx
+  sudo sed -i 's/^[^#].*location\s\/\s{[.\n]*/\tlocation \/ {\n\t\tproxy_pass http:\/\/localhost:8080;/' nginx.conf
+  service nginx start
+  sudo setenforce 0
+  cd /home/ec2-user/spring-boot/spring-boot-samples/spring-boot-sample-tomcat
+  mvn spring-boot:run
+  EOF
 }
-
 
 resource "aws_security_group" "security-group" {
   vpc_id      = "${aws_vpc.vpc.id}"
@@ -140,6 +147,12 @@ resource "aws_security_group" "security-group" {
     {
       from_port = "80"
       to_port   = "80"
+      protocol  = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      from_port = "8080"
+      to_port   = "8080"
       protocol  = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
     },
@@ -163,6 +176,11 @@ resource "aws_security_group" "security-group" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_key_pair" "vm_key" {
+  key_name   = "vmkey"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0gnaIxNKWCupRDUS5d8gl/FHm2keegihvOCy+tQ3XbIyFDQdSGryNxBGcGyPDWoYzK3z1PnTjldJ9kxFVqq3PadJXq9VGYvQ4EB4SE/dVY0ACM9VKmC8kLdBrggNuZxYZc0tY0jJegSZPjvBX74qknW6gW5YghTAf1Y4G3uovJRTcl/yaQck8c3NsUwerppZxrA91XD5vwujD5zaPq+UJAUwvePqzsEi/C6ZYyJiD9KBG9QMNJd9POUWUeAHwTgbbw+er40mKIyIoXBZ47YxlQwKAfnCam7/DQagcqkqKTMuqhz+j19IrAZ95/1w8gyY6tNdmTzyi1XhWFma4NkLt blissnd@blissnd-NUC"
 }
 
 output "nginx_domain" {
@@ -200,7 +218,7 @@ resource "aws_security_group" "bastion-sg" {
 }
 
 resource "aws_key_pair" "bastion_key" {
-  key_name   = "hello"
+  key_name   = "bastionkey"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0gnaIxNKWCupRDUS5d8gl/FHm2keegihvOCy+tQ3XbIyFDQdSGryNxBGcGyPDWoYzK3z1PnTjldJ9kxFVqq3PadJXq9VGYvQ4EB4SE/dVY0ACM9VKmC8kLdBrggNuZxYZc0tY0jJegSZPjvBX74qknW6gW5YghTAf1Y4G3uovJRTcl/yaQck8c3NsUwerppZxrA91XD5vwujD5zaPq+UJAUwvePqzsEi/C6ZYyJiD9KBG9QMNJd9POUWUeAHwTgbbw+er40mKIyIoXBZ47YxlQwKAfnCam7/DQagcqkqKTMuqhz+j19IrAZ95/1w8gyY6tNdmTzyi1XhWFma4NkLt blissnd@blissnd-NUC"
 }
 
